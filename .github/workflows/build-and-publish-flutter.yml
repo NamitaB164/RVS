@@ -1,0 +1,40 @@
+name: Build Flutter web and publish dist
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.10.6'
+
+      - name: Enable web
+        run: flutter config --enable-web
+
+      - name: Resolve packages
+        working-directory: frontend/rvs_web
+        run: flutter pub get
+
+      - name: Build web
+        working-directory: frontend/rvs_web
+        run: flutter build web --release
+
+      - name: Prepare dist branch
+        run: |
+          mkdir -p vercel-dist
+          cp -r frontend/rvs_web/build/web/* vercel-dist/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan publish/vercel-dist
+          git --work-tree vercel-dist add --all
+          git --work-tree vercel-dist commit -m "Publish Flutter web build"
+          git push -f origin publish/vercel-dist
