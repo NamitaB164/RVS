@@ -2,7 +2,7 @@
   "version": 2,
   "name": "rvs-frontend",
   "builds": [
-    { "src": "frontend/rvs_web/**", "use": "@vercel/static" }
+    { "src": "/**", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/(.*)", "dest": "/index.html" }

@@ -1,4 +1,4 @@
-name: Build Flutter web and publish dist
+name: Build Flutter web and publish to Vercel branch
 
 on:
   push:
@@ -8,35 +8,47 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.32.8'
+          flutter-version: '3.3.8' # Using the version from your original file
 
-
-
-      - name: Enable web
+      - name: Enable web support
         run: flutter config --enable-web
 
-      - name: Resolve packages
+      - name: Get Flutter packages
         working-directory: frontend/rvs_web
         run: flutter pub get
 
-      - name: Build web
+      - name: Build Flutter web app
         working-directory: frontend/rvs_web
         run: flutter build web --release
 
-      - name: Prepare dist branch
+      - name: Prepare distribution directory
         run: |
+          # Create a directory to hold all files for deployment
           mkdir -p vercel-dist
-          cp -r frontend/rvs_web/build/web/* vercel-dist/
+
+          # Copy the built Flutter app to the root of the dist directory.
+          # The '.' at the end is important to correctly copy the directory's contents.
+          cp -r frontend/rvs_web/build/web/. vercel-dist/
+
+          # Copy the vercel.json file into the distribution directory
+          cp vercel.json vercel-dist/
+
+      - name: Commit and Push to Distribution Branch
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Create a new orphan branch containing only the build artifacts
           git checkout --orphan publish/vercel-dist
+          # Use the distribution directory as the working tree
           git --work-tree vercel-dist add --all
           git --work-tree vercel-dist commit -m "Publish Flutter web build"
+          # Force push to the deployment branch
           git push -f origin publish/vercel-dist
