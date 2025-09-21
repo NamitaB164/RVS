@@ -12,6 +12,5 @@ This project uses RVS principles in combination with machine learning to predict
 2. **Training**: A Random Forest Classifier is trained (`trainmodel.py`) on encoded structural features.
 3. **Model Deployment**: The trained model and label encoders are served using a FastAPI backend (`app.py`).
 4. **Prediction**: Users submit building details via an API and receive predicted seismic risk levels.
-5. **Database Support**: SQLAlchemy models (`models.py`, `db.py`) are used for optional persistence of predictions.
 
 
