@@ -1,16 +1,134 @@
-# Rapid Visual Screening (RVS) Earthquake Risk Predictor
+# Rapid Visual Screening (RVS) Seismic Damage Predictor
 
-Rapid Visual Screening (RVS) is a preliminary method for quickly evaluating the vulnerability of buildings to seismic hazards without performing an in-depth structural analysis. It leverages visual and architectural characteristics—such as construction material, number of stories, and structural irregularities—to estimate risk levels.
+This project implements a high-performance seismic damage prediction system designed for Rapid Visual Screening (RVS). The tool leverages machine learning to assess building vulnerability and provide FEMA-standard risk ratings based on structural and geographical parameters.
 
-This project uses RVS principles in combination with machine learning to predict the seismic risk of buildings based on user-input parameters.
+## Overview
 
----
+Rapid Visual Screening is a methodology used by emergency managers and civil engineers to quickly identify buildings that are potentially hazardous in the event of an earthquake. This application automates that process using an optimized XGBoost classifier trained on historical earthquake data.
 
-## How It Works
+## Dataset Source
 
-1. **Data Collection**: A CSV dataset (`seismo_rvs_dataset.csv`) containing structural details and risk ratings is used to train the model.
-2. **Training**: A Random Forest Classifier is trained (`trainmodel.py`) on encoded structural features.
-3. **Model Deployment**: The trained model and label encoders are served using a FastAPI backend (`app.py`).
-4. **Prediction**: Users submit building details via an API and receive predicted seismic risk levels.
+The model is trained on the "Nepal Earthquake: Case Study on Building Damage" dataset provided by DrivenData.
 
+*   **Competition**: [Nepal Earthquake: Case Study on Building Damage](https://www.drivendata.org/competitions/57/nepal-earthquake)
+*   **Data Source**: 2015 Nepal Earthquake structural survey records.
 
+## Core Functionalities
+
+*   **Balanced XGBoost Inference**: A tree-based multiclass classifier optimized for identifying 'Safe', 'Restricted', and 'Unsafe' structural states.
+*   **Geo-Target Encoding**: Advanced preprocessing that maps high-cardinality geographical IDs (Region, District, Local) to historical damage means for superior spatial precision.
+*   **Real-time Risk Dashboard**: A Flutter-based interactive interface for rapid data entry and instant assessment.
+*   **FEMA Protocol Mapping**: Automatic conversion of damage grades into standardized FEMA response tags (SAFE/RESTRICTED/UNSAFE).
+
+## System Architecture
+
+The following diagram illustrates the end-to-end data flow and logical layers of the system.
+
+```puml
+@startuml
+skinparam handwritten false
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName "Inter"
+skinparam ranksep 50
+skinparam nodesep 100
+
+' --- Pure Monochrome Styling ---
+skinparam BackgroundColor white
+skinparam DefaultFontColor black
+skinparam ArrowColor black
+skinparam BorderColor black
+
+skinparam package {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+}
+
+skinparam rectangle {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+}
+
+skinparam note {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+}
+
+' --- Elements Stacked Vertically for Clarity ---
+
+package "1. Client Layer" {
+    rectangle "Flutter RVS App" as Client
+    note right of Client : Data Entry (Sliders/Inputs)
+}
+
+package "2. Communication Layer" {
+    rectangle "FastAPI Server" as API
+}
+
+package "3. Core Processing" {
+    package "Pre-Processing" {
+        rectangle "Target Encoder" as TE
+        rectangle "Label Encoder" as LE
+    }
+
+    package "AI Engine" {
+        rectangle "XGBoost Predictor" as Model
+        note right of Model : v3.2.0 Balanced
+    }
+
+    rectangle "FEMA Mapper" as Mapper
+}
+
+database "Persistent Storage" {
+    rectangle "xgb_model.pkl" as M1
+}
+
+' --- Linear Data Flow ---
+
+Client -down-> API : [A] POST JSON
+API -down-> TE : [B] Encode Geo
+API -down-> LE : [C] Encode Cat
+
+TE -down-> Model
+LE -down-> Model
+
+Model -down-> Mapper : [D] Prediction
+Mapper -up-> API : [E] Final Tag
+
+API -up-> Client : [F] Display Result
+
+@enduml
+```
+
+## Technical Pipeline
+
+1.  **Frontend (Flutter)**: Collects 10 key features including building age, area, height, foundation type, and roof material.
+2.  **API (FastAPI)**: Validates input JSON and routes it to the inference pipeline.
+3.  **Preprocessing**:
+    *   **Label Encoding**: Translates categorical building materials into numeric indices.
+    *   **Target Encoding**: Replaces raw Geo IDs with their statistically probable damage impact based on training data.
+4.  **Inference**: The XGBoost model (trained with under-sampling to eliminate majority class bias) predicts the damage grade.
+5.  **Assessment**: The FEMA Mapper assigns a final safety protocol and UI color code.
+
+## File Structure
+
+*   **/backend**: FastAPI implementation, model training scripts, and serialized artifacts.
+*   **/frontend**: Flutter web application and UI logic.
+*   **/docs**: System design and architectural documentation.
+
+## Running the Project
+
+### Backend
+```bash
+cd backend
+python app.py
+```
+
+### Frontend
+```bash
+cd frontend/rvs_web
+flutter run -d web-server --web-port 8080
+```

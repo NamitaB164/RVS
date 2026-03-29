@@ -1,2 +1,11 @@
 *.deb
 *.tar.gz
+
+# Datasets
+train_values.csv
+train_labels.csv
+test_values.csv
+*.csv
+
+# Python
+__pycache__/
