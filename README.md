@@ -24,7 +24,8 @@ The model is trained on the "Nepal Earthquake: Case Study on Building Damage" da
 
 The following diagram illustrates the end-to-end data flow and logical layers of the system.
 
-!System Architecture(RVS/System1.png)
+![System Architecture](System1.png)
+
 
 
 
